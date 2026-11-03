@@ -1,0 +1,491 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mortgage Calculator (AU)</title>
+<style>
+:root {
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --text: #1c2630;
+  --muted: #5f6b7a;
+  --accent: #0a6e5c;
+  --accent-text: #ffffff;
+  --border: #d5dde6;
+  --result-bg: #e9f6f2;
+  --error: #b42318;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e151d;
+    --card: #17212c;
+    --text: #e6edf3;
+    --muted: #97a4b3;
+    --accent: #3cc0a3;
+    --accent-text: #0e151d;
+    --border: #2b3847;
+    --result-bg: #132b26;
+    --error: #ff8a80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e151d;
+  --card: #17212c;
+  --text: #e6edf3;
+  --muted: #97a4b3;
+  --accent: #3cc0a3;
+  --accent-text: #0e151d;
+  --border: #2b3847;
+  --result-bg: #132b26;
+  --error: #ff8a80;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  padding: env(safe-area-inset-top, 0px) 16px env(safe-area-inset-bottom, 0px);
+  min-height: 100vh;
+}
+
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 0 48px;
+}
+
+h1 {
+  font-size: 1.75rem;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 720px) {
+  .layout { grid-template-columns: 1fr 1fr; }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 6px;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.input-wrap {
+  position: relative;
+}
+
+.prefix, .suffix {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  font-size: 0.95rem;
+}
+.prefix { left: 12px; }
+.suffix { right: 12px; }
+
+input, select {
+  width: 100%;
+  padding: 11px 12px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+}
+
+input.has-prefix { padding-left: 28px; }
+input.has-suffix { padding-right: 36px; }
+
+input:focus, select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  border-color: var(--accent);
+}
+
+input.invalid {
+  border-color: var(--error);
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.85rem;
+  margin-top: 4px;
+  min-height: 1em;
+}
+
+.headline {
+  background: var(--result-bg);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.headline .label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.headline .amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.2;
+}
+
+.stat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.stat-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+.stat-list li:last-child {
+  border-bottom: none;
+}
+
+.stat-list .value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.note {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 16px;
+}
+
+.good {
+  color: var(--accent);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mortgage Calculator</h1>
+  <p class="subtitle">Estimate your principal and interest repayments in AUD.</p>
+
+  <div class="layout">
+    <section class="card" aria-label="Loan details">
+      <div class="field">
+        <label for="loan">Loan amount</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input id="loan" class="has-prefix" type="text" inputmode="numeric" value="600,000">
+        </div>
+        <div class="error" id="loan-err"></div>
+      </div>
+
+      <div class="field">
+        <label for="rate">Interest rate (p.a.)</label>
+        <div class="input-wrap">
+          <input id="rate" class="has-suffix" type="number" inputmode="decimal" min="0" max="30" step="0.05" value="6.00">
+          <span class="suffix">%</span>
+        </div>
+        <div class="error" id="rate-err"></div>
+      </div>
+
+      <div class="field">
+        <label for="term">Loan term</label>
+        <div class="input-wrap">
+          <input id="term" class="has-suffix" type="number" inputmode="numeric" min="1" max="40" step="1" value="30">
+          <span class="suffix">years</span>
+        </div>
+        <div class="error" id="term-err"></div>
+      </div>
+
+      <div class="field">
+        <label for="loan-type">Loan type</label>
+        <select id="loan-type">
+          <option value="pi" selected>Principal and interest</option>
+          <option value="io">Interest only</option>
+        </select>
+      </div>
+
+      <div class="field" id="io-field" hidden>
+        <label for="io-term">Interest-only period <span class="hint" style="display:inline;font-weight:400">(years)</span></label>
+        <div class="input-wrap">
+          <input id="io-term" class="has-suffix" type="number" inputmode="numeric" min="0" max="40" step="1" value="5">
+          <span class="suffix">years</span>
+        </div>
+        <div class="hint">Repayments cover interest only during this period, then principal and interest for the rest of the term.</div>
+        <div class="error" id="io-err"></div>
+      </div>
+
+      <div class="field">
+        <label for="freq">Repayment frequency</label>
+        <select id="freq">
+          <option value="monthly" selected>Monthly</option>
+          <option value="fortnightly">Fortnightly</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="extra">Extra repayment per period <span class="hint" style="display:inline;font-weight:400">(optional)</span></label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input id="extra" class="has-prefix" type="number" inputmode="decimal" min="0" step="50" value="0">
+        </div>
+        <div class="error" id="extra-err"></div>
+      </div>
+    </section>
+
+    <section class="card" aria-live="polite" aria-label="Results">
+      <div class="headline">
+        <div class="label" id="period-label">Estimated monthly repayment</div>
+        <div class="amount" id="repayment">$0.00</div>
+      </div>
+
+      <ul class="stat-list">
+        <li><span>Total repaid over the loan</span><span class="value" id="total-repaid">$0.00</span></li>
+        <li><span>Total interest paid</span><span class="value" id="total-interest">$0.00</span></li>
+        <li><span>Interest as share of loan</span><span class="value" id="interest-share">0%</span></li>
+        <li><span>Time to repay</span><span class="value" id="payoff">-</span></li>
+        <li id="pi-row" hidden><span>Repayment after interest-only period</span><span class="value" id="pi-payment">-</span></li>
+        <li id="saved-row" hidden><span>Interest saved by extra repayments</span><span class="value good" id="saved">$0.00</span></li>
+      </ul>
+
+      <p class="note">This is an estimate only. It assumes a constant interest rate and principal and interest repayments. It does not include fees, stamp duty, lenders mortgage insurance, or taxes. Speak with a lender or mortgage broker for an accurate quote.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var fmt = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
+
+  var el = {
+    loan: document.getElementById('loan'),
+    rate: document.getElementById('rate'),
+    term: document.getElementById('term'),
+    freq: document.getElementById('freq'),
+    extra: document.getElementById('extra'),
+    repayment: document.getElementById('repayment'),
+    periodLabel: document.getElementById('period-label'),
+    totalRepaid: document.getElementById('total-repaid'),
+    totalInterest: document.getElementById('total-interest'),
+    interestShare: document.getElementById('interest-share'),
+    payoff: document.getElementById('payoff'),
+    savedRow: document.getElementById('saved-row'),
+    saved: document.getElementById('saved'),
+    loanType: document.getElementById('loan-type'),
+    ioField: document.getElementById('io-field'),
+    ioTerm: document.getElementById('io-term'),
+    piRow: document.getElementById('pi-row'),
+    piPayment: document.getElementById('pi-payment')
+  };
+
+  // Standard amortising loan repayment, with extra repayments simulated period by period.
+  function simulate(principal, annualRatePct, years, perYear, extra) {
+    var r = annualRatePct / 100 / perYear;
+    var n = Math.round(years * perYear);
+    var base = r === 0 ? principal / n : principal * r / (1 - Math.pow(1 + r, -n));
+    var payment = base + extra;
+
+    var balance = principal;
+    var totalInterest = 0;
+    var periods = 0;
+
+    while (balance > 0.005 && periods < n) {
+      var interest = balance * r;
+      totalInterest += interest;
+      var principalPaid = Math.min(payment - interest, balance);
+      balance -= principalPaid;
+      periods++;
+    }
+
+    return {
+      basePayment: base,
+      totalInterest: totalInterest,
+      periods: periods
+    };
+  }
+
+  // Repayment schedule with an optional interest-only period at the start.
+  // During interest-only, the repayment covers interest only (extra repayments reduce principal).
+  // After it, repayments amortise the remaining balance over the remaining term.
+  function simulateLoan(principal, annualRatePct, years, perYear, extra, ioYears) {
+    var r = annualRatePct / 100 / perYear;
+    var n = Math.round(years * perYear);
+    var ioN = Math.round(ioYears * perYear);
+
+    function amortPmt(bal, periodsLeft) {
+      return r === 0 ? bal / periodsLeft : bal * r / (1 - Math.pow(1 + r, -periodsLeft));
+    }
+
+    var balance = principal;
+    var totalInterest = 0;
+    var periods = 0;
+
+    while (balance > 0.005 && periods < n) {
+      var interest = balance * r;
+      totalInterest += interest;
+      var payment = periods < ioN
+        ? interest + extra
+        : amortPmt(balance, n - periods) + extra;
+      var principalPaid = Math.min(payment - interest, balance);
+      balance -= principalPaid;
+      periods++;
+    }
+
+    return {
+      firstPayment: ioN > 0 ? principal * r : amortPmt(principal, n),
+      piPayment: amortPmt(principal, n - ioN),
+      totalInterest: totalInterest,
+      periods: periods
+    };
+  }
+
+  function readNumber(input, errEl, min, max, label) {
+    var raw = input.value.trim().replace(/,/g, '');
+    var v = parseFloat(raw);
+    var msg = '';
+    if (raw === '' || isNaN(v)) {
+      msg = 'Please enter a number.';
+    } else if (v < min) {
+      msg = label + ' must be at least ' + min + '.';
+    } else if (max !== undefined && v > max) {
+      msg = label + ' must be no more than ' + max + '.';
+    }
+    errEl.textContent = msg;
+    input.classList.toggle('invalid', !!msg);
+    return msg ? null : v;
+  }
+
+  function formatYearsMonths(periods, perYear) {
+    var totalMonths = Math.round(periods / perYear * 12);
+    var y = Math.floor(totalMonths / 12);
+    var m = totalMonths % 12;
+    var parts = [];
+    if (y) parts.push(y + (y === 1 ? ' year' : ' years'));
+    if (m) parts.push(m + (m === 1 ? ' month' : ' months'));
+    return parts.length ? parts.join(' ') : 'Less than a month';
+  }
+
+  function update() {
+    var loanEl = document.getElementById('loan-err');
+    var principal = readNumber(el.loan, loanEl, 1, undefined, 'Loan amount');
+    var rate = readNumber(el.rate, document.getElementById('rate-err'), 0, 30, 'Interest rate');
+    var years = readNumber(el.term, document.getElementById('term-err'), 1, 40, 'Loan term');
+    var extra = readNumber(el.extra, document.getElementById('extra-err'), 0, undefined, 'Extra repayment');
+
+    var isIO = el.loanType.value === 'io';
+    var ioYears = isIO ? readNumber(el.ioTerm, document.getElementById('io-err'), 0, 40, 'Interest-only period') : 0;
+    if (isIO && ioYears !== null && years !== null && ioYears >= years) {
+      document.getElementById('io-err').textContent = 'Interest-only period must be shorter than the loan term.';
+      el.ioTerm.classList.add('invalid');
+      ioYears = null;
+    }
+    el.ioField.hidden = !isIO;
+
+    if (principal === null || rate === null || years === null || extra === null || ioYears === null) {
+      el.repayment.textContent = '-';
+      el.totalRepaid.textContent = '-';
+      el.totalInterest.textContent = '-';
+      el.interestShare.textContent = '-';
+      el.payoff.textContent = '-';
+      el.savedRow.hidden = true;
+      el.piRow.hidden = true;
+      return;
+    }
+
+    var perYear = el.freq.value === 'fortnightly' ? 26 : 12;
+    var periodName = el.freq.value === 'fortnightly' ? 'fortnightly' : 'monthly';
+
+    var base = simulateLoan(principal, rate, years, perYear, 0, ioYears);
+    var withExtra = simulateLoan(principal, rate, years, perYear, extra, ioYears);
+
+    var paymentShown = base.firstPayment + extra;
+
+    el.periodLabel.textContent = (isIO ? 'Estimated ' + periodName + ' interest-only repayment' : 'Estimated ' + periodName + ' repayment') + (extra > 0 ? ' (incl. extra)' : '');
+    el.piRow.hidden = !isIO;
+    el.piPayment.textContent = isIO ? fmt.format(base.piPayment) + ' ' + periodName : '';
+    el.repayment.textContent = fmt.format(paymentShown);
+
+    var totalRepaid = principal + withExtra.totalInterest;
+    el.totalRepaid.textContent = fmt.format(totalRepaid);
+    el.totalInterest.textContent = fmt.format(withExtra.totalInterest);
+    el.interestShare.textContent = (withExtra.totalInterest / principal * 100).toFixed(1) + '%';
+    el.payoff.textContent = formatYearsMonths(withExtra.periods, perYear);
+
+    if (extra > 0) {
+      var saved = base.totalInterest - withExtra.totalInterest;
+      el.saved.textContent = fmt.format(Math.max(0, saved));
+      el.savedRow.hidden = false;
+    } else {
+      el.savedRow.hidden = true;
+    }
+  }
+
+  ['loan', 'rate', 'term', 'extra', 'ioTerm'].forEach(function (id) {
+    el[id].addEventListener('input', update);
+  });
+  el.freq.addEventListener('change', update);
+  el.loanType.addEventListener('change', update);
+
+  // Show the loan amount with thousands separators once the field loses focus.
+  el.loan.addEventListener('blur', function () {
+    var v = parseFloat(el.loan.value.replace(/,/g, ''));
+    if (!isNaN(v) && v >= 0) {
+      el.loan.value = Math.round(v).toLocaleString('en-AU');
+    }
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
+
+</body></html>
